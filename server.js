@@ -7,7 +7,23 @@ import africastalking from 'africastalking';
 dotenv.config();
 
 const app = express();
-app.use(cors());
+
+// CORS configuration: Allow requests from Netlify frontend
+const allowedOrigins = [
+  'https://your-frontend-name.netlify.app', // Add your actual Netlify URL here
+];
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+};
+
+app.use(cors(corsOptions)); // Apply CORS with the specific origin
 app.use(express.json());
 
 // Initialize Africa's Talking
