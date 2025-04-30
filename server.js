@@ -10,7 +10,7 @@ const app = express();
 
 // CORS configuration: Allow requests from Netlify frontend
 const allowedOrigins = [
-  'https://your-frontend-name.netlify.app', // Add your actual Netlify URL here
+  'https://heavenly-frontend.netlify.app', // Use your actual Netlify frontend URL here
 ];
 
 const corsOptions = {
