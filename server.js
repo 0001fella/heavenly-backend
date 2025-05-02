@@ -2,6 +2,8 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import mongoose from 'mongoose';
+mongoose.set('strictQuery', false);  // or true, depending on the behavior you prefer
+
 import bookingRoutes from './routes/bookingRoutes.js'; // 💥 Add this
 
 dotenv.config();
