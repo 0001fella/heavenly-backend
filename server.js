@@ -1,8 +1,8 @@
 import express from 'express';
 import dotenv from 'dotenv';
-import axios from 'axios';
-import cors from 'cors';
+import nodemailer from 'nodemailer';
 import africastalking from 'africastalking';
+import cors from 'cors';
 
 dotenv.config();
 
@@ -34,12 +34,21 @@ const at = africastalking({
 
 const sms = at.SMS;
 
+// Initialize Nodemailer for email functionality
+const transporter = nodemailer.createTransport({
+  service: 'gmail', // Or use your email provider (e.g., SendGrid, Mailgun)
+  auth: {
+    user: process.env.SMTP_USER,  // Your email address
+    pass: process.env.SMTP_PASS,  // Your email password or app-specific password
+  },
+});
+
 // Function to send SMS using Africa's Talking
 const sendSmsConfirmation = async (phoneNumber) => {
   try {
     const response = await sms.send({
       to: [phoneNumber],
-      message: '✅ Heavenly Rhythms: Your booking and payment request has been received. We will contact you shortly.',
+      message: '✅ Heavenly Rhythms: Your booking request has been received. We will contact you shortly. 🎶',
       from: process.env.AT_SENDER_ID || '', // Optional: Your registered sender ID
     });
     console.log('📩 SMS sent:', response);
@@ -48,66 +57,70 @@ const sendSmsConfirmation = async (phoneNumber) => {
   }
 };
 
-// Function to initiate M-PESA STK Push
-const initiatePayment = async (phoneNumber, amount, res) => {
-  const url = 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest';
+// Function to send email notification for contact form submission
+const sendEmailConfirmation = async (contactInfo) => {
+  const { name, email, message } = contactInfo;
 
-  const timestamp = new Date().toISOString().replace(/[^0-9]/g, '').slice(0, 14);
-  const password = Buffer.from(
-    `${process.env.MPESA_SHORTCODE}${process.env.MPESA_PASSKEY}${timestamp}`
-  ).toString('base64');
-
-  const headers = {
-    Authorization: `Bearer ${process.env.MPESA_LIPA_NGAPI}`,
-    'Content-Type': 'application/json',
-  };
-
-  const payload = {
-    BusinessShortCode: process.env.MPESA_SHORTCODE,
-    Password: password,
-    Timestamp: timestamp,
-    TransactionType: 'CustomerPayBillOnline',
-    Amount: amount,
-    PartyA: phoneNumber,
-    PartyB: process.env.MPESA_SHORTCODE,
-    PhoneNumber: phoneNumber,
-    CallBackURL: process.env.MPESA_CALLBACK_URL,
-    AccountReference: 'HeavenlyRhythmsBooking',
-    TransactionDesc: 'Heavenly Rhythms Studio Booking Payment',
+  const mailOptions = {
+    from: process.env.SMTP_USER,  // Your email address
+    to: process.env.CONTACT_EMAIL,  // The email address to receive contact form submissions
+    subject: `New Contact Message from ${name}`,
+    text: `
+      You have received a new message from ${name} (${email}):
+      
+      Message:
+      ${message}
+    `,
   };
 
   try {
-    const response = await axios.post(url, payload, { headers });
-    console.log('✅ STK Push Response:', response.data);
-
-    // Send SMS confirmation after successful STK Push request
-    await sendSmsConfirmation(phoneNumber);
-
-    res.status(200).json(response.data);
+    await transporter.sendMail(mailOptions);
+    console.log('📧 Email sent:', mailOptions);
   } catch (error) {
-    console.error('❌ STK Push Error:', error.response?.data || error.message);
-    res.status(500).json({
-      message: 'Failed to initiate STK Push',
-      error: error.response?.data || error.message,
-    });
+    console.error('❌ Email Error:', error);
   }
 };
 
-// Route to trigger payment
-app.post('/pay', async (req, res) => {
-  const { phoneNumber, amount } = req.body;
+// Route to handle booking and send SMS confirmation
+app.post('/book', async (req, res) => {
+  const { phoneNumber, name } = req.body;
 
-  if (!phoneNumber || !amount) {
-    return res.status(400).json({ message: 'phoneNumber and amount are required.' });
+  if (!phoneNumber) {
+    return res.status(400).json({ message: 'phoneNumber is required.' });
   }
 
-  initiatePayment(phoneNumber, amount, res);
+  try {
+    // Send SMS confirmation after booking request
+    const message = `Hi ${name || 'Customer'}, your booking at Heavenly Rhythms Studio was successful. See you soon! 🎶`;
+    await sendSmsConfirmation(phoneNumber);
+
+    res.status(200).json({
+      message: 'Booking received and SMS sent ✅',
+    });
+  } catch (error) {
+    console.error('❌ Error handling booking:', error);
+    res.status(500).json({ message: 'Server error', error });
+  }
 });
 
-// Callback for M-PESA (optional)
-app.post('/callback', (req, res) => {
-  console.log('🔁 M-PESA Callback received:', req.body);
-  res.status(200).json({ message: 'Callback received successfully' });
+// Route to handle contact form submissions
+app.post('/contact', async (req, res) => {
+  const { name, email, message } = req.body;
+
+  if (!name || !email || !message) {
+    return res.status(400).json({ message: 'All fields (name, email, and message) are required.' });
+  }
+
+  try {
+    // Send email confirmation
+    await sendEmailConfirmation({ name, email, message });
+    
+    // Respond to the frontend
+    res.status(200).json({ message: 'Your message has been received! We will get back to you soon.' });
+  } catch (error) {
+    console.error('❌ Error handling contact form:', error);
+    res.status(500).json({ message: 'Server error', error });
+  }
 });
 
 // Start server

@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const bookingSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true },
+  phoneNumber: { type: String, required: true }, // ✅ ADD THIS
   service: { type: String, required: true },
   date: { type: String, required: true },
   timeFrom: { type: String, required: true },
