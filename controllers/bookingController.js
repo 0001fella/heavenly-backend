@@ -1,7 +1,7 @@
-const Booking = require('../models/Booking');
-const { sendSMS } = require('../utils/sms');
+import Booking from '../models/Booking.js';
+import { sendSMS } from '../utils/sms.js';
 
-const createBooking = async (req, res) => {
+export const createBooking = async (req, res) => {
   try {
     const booking = await Booking.create(req.body);
 
@@ -24,5 +24,3 @@ const createBooking = async (req, res) => {
     res.status(500).json({ message: 'Server error', error });
   }
 };
-
-module.exports = { createBooking };
