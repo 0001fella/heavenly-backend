@@ -7,7 +7,7 @@ mongoose.set('strictQuery', false);  // or true, depending on the behavior you p
 import bookingRoutes from './routes/bookingRoutes.js';
 import testimonialRoutes from './routes/testimonialRoutes.js'; // Added route for testimonials
 import commentRoutes from './routes/commentRoutes.js';  // Import the comment routes
-const contactRoutes = require("./routes/contactRoutes");
+import contactRoutes from "./routes/contactRoutes.js";
 
 app.use("/api", contactRoutes);
 
