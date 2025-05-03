@@ -1,28 +1,28 @@
-const nodemailer = require('nodemailer');
+import nodemailer from 'nodemailer';
 
-const sendEmail = async (to, subject, text, html) => {
-  const transporter = nodemailer.createTransport({
-    service: 'gmail', // Use your email service, e.g., Gmail, SendGrid
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
-
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to,
-    subject,
-    text,
-    html,
-  };
-
+const sendEmail = async (to, subject, text) => {
   try {
-    await transporter.sendMail(mailOptions);
-    console.log('Email sent successfully');
+    const transporter = nodemailer.createTransport({
+      service: 'gmail', // or 'Outlook', 'Yahoo', etc.
+      auth: {
+        user: process.env.EMAIL_USER,       // your email
+        pass: process.env.EMAIL_PASSWORD,   // app password (not your login password)
+      },
+    });
+
+    const mailOptions = {
+      from: `"Heavenly Rhythms Studio" <${process.env.EMAIL_USER}>`,
+      to,
+      subject,
+      text,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`📧 Email sent to ${to}: ${info.response}`);
   } catch (error) {
-    console.error('Error sending email:', error);
+    console.error('❌ Email sending error:', error);
+    throw error;
   }
 };
 
-module.exports = sendEmail;
+export default sendEmail;
