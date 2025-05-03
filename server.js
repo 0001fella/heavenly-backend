@@ -2,21 +2,19 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import mongoose from 'mongoose';
-mongoose.set('strictQuery', false);  // or true, depending on the behavior you prefer
-
 import bookingRoutes from './routes/bookingRoutes.js';
-import testimonialRoutes from './routes/testimonialRoutes.js'; // Added route for testimonials
-import commentRoutes from './routes/commentRoutes.js';  // Import the comment routes
-import contactRoutes from './routes/contactRoutes.js';  // Ensure correct path and default import
+import testimonialRoutes from './routes/testimonialRoutes.js';
+import commentRoutes from './routes/commentRoutes.js';
+import contactRoutes from './routes/contactRoutes.js';
 
-
-app.use("/api", contactRoutes);
-
-
+// Initialize dotenv and Express
 dotenv.config();
-
 const app = express();
 
+// Set mongoose to use the preferred behavior for strict query
+mongoose.set('strictQuery', false);
+
+// CORS Configuration
 const allowedOrigins = [
   'https://heavenly-frontend.netlify.app',
 ];
@@ -31,13 +29,17 @@ const corsOptions = {
   },
 };
 
+// Middleware
 app.use(cors(corsOptions));
 app.use(express.json());
 
 // Routes
-app.use('/api/bookings', bookingRoutes);  // Existing booking route
-app.use('/api/testimonials', testimonialRoutes); // New route for testimonials
+app.use("/api", contactRoutes);  // Contact routes
+app.use('/api/bookings', bookingRoutes);  // Booking routes
+app.use('/api/testimonials', testimonialRoutes); // Testimonial routes
+app.use('/api/comments', commentRoutes); // Comment routes
 
+// MongoDB Connection and Server Setup
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
