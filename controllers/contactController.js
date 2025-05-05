@@ -1,5 +1,5 @@
-// controllers/contactController.js
-import sendEmail from '../utils/sendEmail.js'; // Assuming you have a sendEmail utility
+import sendEmail from '../Utils/sendEmail.js';
+
 
 // Function to handle sending contact messages
 export const sendMessage = async (req, res) => {
@@ -8,6 +8,12 @@ export const sendMessage = async (req, res) => {
   // Simple validation
   if (![name, email, message].every(Boolean)) {
     return res.status(400).json({ message: 'Please provide all required fields.' });
+  }
+
+  // Email validation using regex
+  const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ message: 'Please provide a valid email address.' });
   }
 
   try {

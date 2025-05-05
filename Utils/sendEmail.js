@@ -3,10 +3,10 @@ import nodemailer from 'nodemailer';
 const sendEmail = async (to, subject, text) => {
   try {
     const transporter = nodemailer.createTransport({
-      service: 'gmail', // or 'Outlook', 'Yahoo', etc.
+      service: 'gmail', // or other email service (e.g., SendGrid, Mailgun)
       auth: {
-        user: process.env.EMAIL_USER,       // your email
-        pass: process.env.EMAIL_PASSWORD,   // app password (not your login password)
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASSWORD,
       },
     });
 
@@ -20,8 +20,8 @@ const sendEmail = async (to, subject, text) => {
     const info = await transporter.sendMail(mailOptions);
     console.log(`📧 Email sent to ${to}: ${info.response}`);
   } catch (error) {
-    console.error('❌ Email sending error:', error);
-    throw error;
+    console.error('❌ Error sending email:', error);
+    throw error; // Re-throw the error to be handled by the controller
   }
 };
 
