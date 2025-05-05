@@ -1,7 +1,8 @@
 // routes/testimonials.js
-const express = require("express");
+import express from "express";
+import Testimonial from "../models/Testimonial.js";
+
 const router = express.Router();
-const Testimonial = require("../models/Testimonial");
 
 // GET all testimonials
 router.get("/", async (req, res) => {
@@ -30,4 +31,4 @@ router.post("/", async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;
