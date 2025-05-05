@@ -1,25 +1,22 @@
 import mongoose from 'mongoose';
 
+// Schema for Testimonial
 const testimonialSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
-    trim: true,
   },
   feedback: {
     type: String,
     required: true,
-    trim: true,
   },
   rating: {
     type: Number,
     required: true,
-    min: 1,
-    max: 5,
   },
-}, {
-  timestamps: true, // adds createdAt and updatedAt
-});
+}, { timestamps: true });
 
+// Model for Testimonial
 const Testimonial = mongoose.model('Testimonial', testimonialSchema);
+
 export default Testimonial;
