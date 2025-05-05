@@ -10,18 +10,20 @@ import contactRoutes from './routes/contactRoutes.js';
 dotenv.config();
 const app = express();
 
-mongoose.set('strictQuery', false);
-
 // CORS Configuration
-const allowedOrigins = ['https://heavenly-frontend.netlify.app'];
+const allowedOrigins = [process.env.FRONTEND_URL || 'https://heavenly-frontend.netlify.app']; // Using environment variable for flexibility
 const corsOptions = {
   origin: (origin, callback) => {
-    if (allowedOrigins.includes(origin) || !origin) {
+    // Allow requests with no origin (e.g., mobile apps or Postman)
+    if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
     }
   },
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
+  credentials: true, // Allow cookies to be sent
 };
 
 // Middleware
