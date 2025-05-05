@@ -1,4 +1,3 @@
-// routes/testimonials.js
 import express from "express";
 import Testimonial from "../models/Testimonial.js";
 
