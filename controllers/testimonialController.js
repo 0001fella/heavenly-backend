@@ -1,5 +1,5 @@
 // controllers/testimonialController.js
-import Testimonial from '../models/testimonialModel.js';
+import Testimonial from '../models/Testimonial.js';
 
 // Handle POST request for creating a testimonial
 export const createTestimonial = async (req, res) => {
