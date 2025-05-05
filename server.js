@@ -15,12 +15,9 @@ const app = express();
 mongoose.set('strictQuery', false);
 
 // CORS Configuration
-const allowedOrigins = [
-  'https://heavenly-frontend.netlify.app',
-];
-
+const allowedOrigins = ['https://heavenly-frontend.netlify.app'];
 const corsOptions = {
-  origin: function (origin, callback) {
+  origin: (origin, callback) => {
     if (allowedOrigins.includes(origin) || !origin) {
       callback(null, true);
     } else {
@@ -32,6 +29,12 @@ const corsOptions = {
 // Middleware
 app.use(cors(corsOptions));
 app.use(express.json());
+
+// Logging Middleware (Optional)
+app.use((req, res, next) => {
+  console.log(`${req.method} request for ${req.url}`);
+  next();
+});
 
 // Routes
 app.use("/api", contactRoutes);  // Contact routes
@@ -48,4 +51,20 @@ mongoose
       console.log(`🚀 Server running on port ${process.env.PORT || 5002}`)
     );
   })
-  .catch((err) => console.error('❌ MongoDB error:', err));
+  .catch((err) => {
+    console.error('❌ MongoDB connection failed:', err.stack);
+  });
+
+// Graceful Shutdown (Optional)
+process.on('SIGINT', () => {
+  mongoose.connection.close(() => {
+    console.log('MongoDB connection closed');
+    process.exit(0);
+  });
+});
+
+// Global Error Handler
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ message: 'Something went wrong!' });
+});

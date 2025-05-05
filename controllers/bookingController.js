@@ -1,49 +1,58 @@
+// controllers/bookingController.js
+
 import Booking from '../models/bookingModel.js';
-import sendEmail from '../utils/sendEmail.js'; // Make sure this utility exists
+import sendEmail from '../utils/sendEmail.js';
 
 export const createBooking = async (req, res) => {
-  const { name, email, phone, date, time, service } = req.body;
-
-  // 1. Validate input
-  if (!name || !email || !phone || !date || !time || !service) {
-    return res.status(400).json({ message: 'Please fill in all required fields.' });
-  }
-
   try {
-    // 2. Save to database
+    const { name, email, phone, date, time, service } = req.body;
+
+    // Input validation
+    if (![name, email, phone, date, time, service].every(Boolean)) {
+      return res.status(400).json({ message: 'Please fill in all required fields.' });
+    }
+
+    // Save to DB
     const booking = await Booking.create(req.body);
 
-    // 3. Send confirmation emails
+    // Email messages
     const clientMessage = `
-      Hello ${name},\n
-      Thank you for booking with Heavenly Rhythms Studio! 🎶\n
-      Details:\n
-      - Service: ${service}\n
-      - Date: ${date}\n
-      - Time: ${time}\n
-      We will contact you shortly to confirm.\n
-      Blessings 🙏
+      Hello ${name},
+
+      🎶 Thank you for booking with Heavenly Rhythms Studio!
+
+      Booking Details:
+      - Service: ${service}
+      - Date: ${date}
+      - Time: ${time}
+
+      We'll reach out shortly to confirm. Stay blessed 🙏
     `;
 
     const ownerMessage = `
-      📢 New Booking Alert:\n
-      - Name: ${name}\n
-      - Email: ${email}\n
-      - Phone: ${phone}\n
-      - Service: ${service}\n
-      - Date: ${date}\n
+      📥 New Booking Received:
+
+      - Name: ${name}
+      - Email: ${email}
+      - Phone: ${phone}
+      - Service: ${service}
+      - Date: ${date}
       - Time: ${time}
     `;
 
-    await sendEmail(email, 'Your Booking at Heavenly Rhythms 🎧', clientMessage);
-    await sendEmail(process.env.ADMIN_EMAIL, '📥 New Booking Received', ownerMessage);
+    // Send emails
+    await Promise.all([
+      sendEmail(email, '🎧 Your Booking - Heavenly Rhythms Studio', clientMessage),
+      sendEmail(process.env.ADMIN_EMAIL, '📢 New Booking Alert', ownerMessage),
+    ]);
 
     res.status(201).json({
-      message: 'Booking saved successfully and emails sent ✅',
+      message: '✅ Booking saved and emails sent successfully',
       booking,
     });
+
   } catch (error) {
-    console.error('❌ Booking failed:', error);
-    res.status(500).json({ message: 'Server error', error });
+    console.error('❌ Booking failed:', error.message);
+    res.status(500).json({ message: 'Booking failed due to server error.' });
   }
 };

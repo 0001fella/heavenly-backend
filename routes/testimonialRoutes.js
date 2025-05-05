@@ -1,13 +1,33 @@
-// routes/testimonialRoutes.js
-import express from 'express';
-import { createTestimonial, getTestimonials } from '../controllers/testimonialController.js';
-
+// routes/testimonials.js
+const express = require("express");
 const router = express.Router();
+const Testimonial = require("../models/Testimonial");
 
-// Route for submitting a testimonial
-router.post('/submit', createTestimonial);
+// GET all testimonials
+router.get("/", async (req, res) => {
+  try {
+    const testimonials = await Testimonial.find();
+    res.json(testimonials);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch testimonials" });
+  }
+});
 
-// Route for getting all testimonials
-router.get('/', getTestimonials);
+// POST a new testimonial
+router.post("/", async (req, res) => {
+  const { name, feedback, rating } = req.body;
 
-export default router;
+  if (!name || !feedback || !rating) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+
+  try {
+    const newTestimonial = new Testimonial({ name, feedback, rating });
+    await newTestimonial.save();
+    res.status(201).json({ message: "Testimonial added successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to save testimonial" });
+  }
+});
+
+module.exports = router;

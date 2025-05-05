@@ -5,7 +5,7 @@ import { sendMessage } from '../controllers/contactController.js';
 
 const router = express.Router();
 
-// POST route for handling contact form submission
-router.post('/contact', sendMessage);
+// POST /api/contact
+router.post('/', sendMessage);
 
 export default router;

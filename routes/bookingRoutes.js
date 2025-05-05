@@ -4,7 +4,7 @@ import nodemailer from 'nodemailer';
 
 const router = express.Router();
 
-// Email setup
+// Set up nodemailer transporter
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -13,35 +13,41 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// Booking endpoint
+// POST /api/bookings
 router.post('/', async (req, res) => {
-  const bookingData = req.body;
-
   try {
-    // 1. Save to DB
-    const booking = new Booking(bookingData);
+    const { name, email, phoneNumber, service, date, timeFrom, timeTo, numberOfPeople } = req.body;
+
+    // Validate basic input (optional: expand later)
+    if (!name || !email || !service || !date || !timeFrom || !timeTo) {
+      return res.status(400).json({ message: 'Missing required booking fields' });
+    }
+
+    // Save booking to database
+    const booking = new Booking({ name, email, phoneNumber, service, date, timeFrom, timeTo, numberOfPeople });
     await booking.save();
 
-    // 2. Send email to customer
+    // Email to customer
     await transporter.sendMail({
       from: process.env.SMTP_USER,
-      to: booking.email,
+      to: email,
       subject: '🎶 Booking Confirmed - Heavenly Rhythms Studio',
-      text: `Hi ${booking.name}, your booking has been confirmed.\n\nDetails:\nService: ${booking.service}\nDate: ${booking.date}\nTime: ${booking.timeFrom} - ${booking.timeTo}\n\nThank you for choosing us!`,
+      text: `Hi ${name}, your booking is confirmed:\n\nService: ${service}\nDate: ${date}\nTime: ${timeFrom} - ${timeTo}\n\nThanks for choosing Heavenly Rhythms!`,
     });
 
-    // 3. Send email to owner
+    // Email to admin
     await transporter.sendMail({
       from: process.env.SMTP_USER,
-      to: process.env.CONTACT_EMAIL, // your studio/admin email
-      subject: '📥 New Booking Alert - Heavenly Rhythms Studio',
-      text: `New booking by ${booking.name}.\n\nEmail: ${booking.email}\nPhone: ${booking.phoneNumber}\nService: ${booking.service}\nDate: ${booking.date}\nTime: ${booking.timeFrom} - ${booking.timeTo}\nPeople: ${booking.numberOfPeople}`,
+      to: process.env.CONTACT_EMAIL,
+      subject: '📥 New Booking Received - Heavenly Rhythms Studio',
+      text: `New booking details:\nName: ${name}\nEmail: ${email}\nPhone: ${phoneNumber}\nService: ${service}\nDate: ${date}\nTime: ${timeFrom} - ${timeTo}\nGuests: ${numberOfPeople}`,
     });
 
-    res.status(200).json({ message: '✅ Booking successful and emails sent' });
+    res.status(200).json({ message: '✅ Booking successful and notifications sent' });
+
   } catch (error) {
     console.error('❌ Booking Error:', error);
-    res.status(500).json({ message: 'Booking failed', error });
+    res.status(500).json({ message: 'Booking failed', error: error.message });
   }
 });
 
