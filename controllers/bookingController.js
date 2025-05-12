@@ -1,7 +1,7 @@
 // controllers/bookingController.js
 
 import Booking from '../models/bookingModel.js';
-import sendEmail from '../utils/sendEmail.js';
+import sendEmail from '../Utils/sendEmail.js';
 
 export const createBooking = async (req, res) => {
   try {
