@@ -14,10 +14,11 @@ dotenv.config();
 
 const app = express();
 
-// --- CORS CONFIG ---
 const allowedOrigins = [
-  process.env.FRONTEND_URL || 'https://heavenlyrhythms.netlify.app'
+  'https://heavenlyrhythms.netlify.app', // Your real frontend
+  'http://localhost:5002'                // Dev mode (optional)
 ];
+
 
 const corsOptions = {
   origin: function (origin, callback) {
