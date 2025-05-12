@@ -3,18 +3,18 @@
 import nodemailer from 'nodemailer';
 
 const sendEmail = async ({ to, subject, text, html = null }) => {
-  const { EMAIL_USER, EMAIL_PASSWORD } = process.env;
+  const { EMAIL_USER, EMAIL_PASS } = process.env;
 
-  if (!EMAIL_USER || !EMAIL_PASSWORD) {
+  if (!EMAIL_USER || !EMAIL_PASS) {
     throw new Error('⚠️ Email credentials are missing in environment variables.');
   }
 
   try {
     const transporter = nodemailer.createTransport({
-      service: 'gmail', // Or swap with a provider like SendGrid or Mailgun for production
+      service: 'gmail',
       auth: {
         user: EMAIL_USER,
-        pass: EMAIL_PASSWORD,
+        pass: EMAIL_PASS,
       },
     });
 
@@ -23,14 +23,14 @@ const sendEmail = async ({ to, subject, text, html = null }) => {
       to,
       subject,
       text,
-      ...(html && { html }), // include HTML if provided
+      ...(html && { html }),
     };
 
     const info = await transporter.sendMail(mailOptions);
     console.log(`✅ Email sent to ${to}: ${info.response}`);
   } catch (error) {
     console.error('❌ Failed to send email:', error.message);
-    throw error; // Allow higher-level handlers to deal with the failure
+    throw error;
   }
 };
 

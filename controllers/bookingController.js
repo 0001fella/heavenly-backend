@@ -1,21 +1,18 @@
 // controllers/bookingController.js
 
 import Booking from '../models/bookingModel.js';
-import sendEmail from '../Utils/sendEmail.js';
+import sendEmail from '../utils/sendEmail.js';
 
 export const createBooking = async (req, res) => {
   try {
     const { name, email, phone, date, time, service } = req.body;
 
-    // Input validation
     if (![name, email, phone, date, time, service].every(Boolean)) {
       return res.status(400).json({ message: 'Please fill in all required fields.' });
     }
 
-    // Save to DB
     const booking = await Booking.create(req.body);
 
-    // Email messages
     const clientMessage = `
       Hello ${name},
 
@@ -40,17 +37,23 @@ export const createBooking = async (req, res) => {
       - Time: ${time}
     `;
 
-    // Send emails
     await Promise.all([
-      sendEmail(email, '🎧 Your Booking - Heavenly Rhythms Studio', clientMessage),
-      sendEmail(process.env.ADMIN_EMAIL, '📢 New Booking Alert', ownerMessage),
+      sendEmail({
+        to: email,
+        subject: '🎧 Your Booking - Heavenly Rhythms Studio',
+        text: clientMessage,
+      }),
+      sendEmail({
+        to: process.env.EMAIL_RECEIVER,
+        subject: '📢 New Booking Alert',
+        text: ownerMessage,
+      }),
     ]);
 
     res.status(201).json({
       message: '✅ Booking saved and emails sent successfully',
       booking,
     });
-
   } catch (error) {
     console.error('❌ Booking failed:', error.message);
     res.status(500).json({ message: 'Booking failed due to server error.' });
