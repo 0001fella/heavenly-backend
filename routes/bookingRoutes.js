@@ -4,7 +4,7 @@ import nodemailer from 'nodemailer';
 
 const router = express.Router();
 
-// Setup nodemailer
+// Setup nodemailer transporter
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -32,7 +32,7 @@ router.post('/', async (req, res) => {
   }
 
   try {
-    // Save booking to DB
+    // Save to DB
     const booking = new Booking({
       name,
       email,
@@ -45,41 +45,48 @@ router.post('/', async (req, res) => {
     });
 
     await booking.save();
+    console.log(`✅ Booking saved for ${name}`);
 
-    // Try sending emails, but don’t fail the booking if they break
+    // Send confirmation email to client
     try {
-      // Email to customer
       await transporter.sendMail({
         from: process.env.SMTP_USER,
         to: email,
         subject: '🎶 Booking Confirmed - Heavenly Rhythms Studio',
         text: `Hi ${name},\n\nYour booking is confirmed!\n\n🎧 Service: ${service}\n📅 Date: ${date}\n🕒 Time: ${timeFrom} - ${timeTo}\n\nThanks for booking with Heavenly Rhythms Studio!`,
       });
-    } catch (err) {
-      console.error('⚠️ Failed to send confirmation email:', err.message);
+      console.log(`📧 Confirmation sent to ${email}`);
+    } catch (emailErr) {
+      console.warn(`⚠️ Email to client failed: ${emailErr.message}`);
     }
 
+    // Notify studio/admin
     try {
-      // Email to admin
       await transporter.sendMail({
         from: process.env.SMTP_USER,
         to: process.env.CONTACT_EMAIL,
         subject: '📥 New Booking Received - Heavenly Rhythms Studio',
         text: `New booking:\nName: ${name}\nEmail: ${email}\nPhone: ${phoneNumber}\nService: ${service}\nDate: ${date}\nTime: ${timeFrom} - ${timeTo}\nGuests: ${numberOfPeople}`,
       });
-    } catch (err) {
-      console.error('⚠️ Failed to notify admin:', err.message);
+      console.log(`📧 Admin notified at ${process.env.CONTACT_EMAIL}`);
+    } catch (adminErr) {
+      console.warn(`⚠️ Email to admin failed: ${adminErr.message}`);
     }
 
-    return res.status(200).json({
-      message: '✅ Booking successful. Confirmation sent.',
+    res.status(200).json({
+      message: '✅ Booking saved and emails attempted.',
       booking
     });
 
-  } catch (error) {
-    console.error('❌ Booking Error:', error.message);
-    return res.status(500).json({ message: 'Booking failed', error: error.message });
+  } catch (err) {
+    console.error('❌ Booking Error:', err.message);
+    res.status(500).json({ message: 'Booking failed. Please try again.', error: err.message });
   }
+});
+
+// Optional: handle OPTIONS preflight (some hosts require it)
+router.options('/', (req, res) => {
+  res.sendStatus(204); // No Content
 });
 
 export default router;
