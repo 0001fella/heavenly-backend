@@ -1,55 +1,55 @@
+// models/bookingModel.js
+
 import mongoose from 'mongoose';
 
 const bookingSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: [true, 'Name is required'],
+    required: true,
     trim: true,
-    minlength: [2, 'Name must be at least 2 characters'],
+    minlength: 2,
   },
   email: {
     type: String,
-    required: [true, 'Email is required'],
+    required: true,
     lowercase: true,
     trim: true,
     match: [/\S+@\S+\.\S+/, 'Enter a valid email'],
   },
   phoneNumber: {
     type: String,
-    required: [true, 'Phone number is required'],
+    required: true,
     trim: true,
     match: [/^\+?[0-9\s\-]{7,15}$/, 'Enter a valid phone number'],
   },
   service: {
     type: String,
-    required: [true, 'Service is required'],
+    required: true,
     trim: true,
   },
   date: {
     type: String,
-    required: [true, 'Booking date is required'],
+    required: true,
     match: [/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format'],
   },
   timeFrom: {
     type: String,
-    required: [true, 'Start time is required'],
+    required: true,
     match: [/^\d{2}:\d{2}$/, 'Time must be in HH:MM format'],
   },
   timeTo: {
     type: String,
-    required: [true, 'End time is required'],
+    required: true,
     match: [/^\d{2}:\d{2}$/, 'Time must be in HH:MM format'],
   },
   numberOfPeople: {
     type: Number,
-    required: [true, 'Number of people is required'],
-    min: [1, 'Must be at least 1 person'],
-    max: [50, 'Cannot exceed 50 people'],
+    required: true,
+    min: 1,
+    max: 50,
   },
 }, {
   timestamps: true,
 });
 
-const Booking = mongoose.model('Booking', bookingSchema);
-
-export default Booking;
+export default mongoose.model('Booking', bookingSchema);
