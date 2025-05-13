@@ -16,11 +16,12 @@ export const createBooking = async (req, res) => {
       numberOfPeople
     } = req.body;
 
-    // Validate required fields
+    // Field validation
     if (![name, email, phoneNumber, service, date, timeFrom, timeTo, numberOfPeople].every(Boolean)) {
       return res.status(400).json({ message: '⚠️ Missing required booking fields.' });
     }
 
+    // Save booking to DB
     const booking = await Booking.create({
       name,
       email,
@@ -32,24 +33,25 @@ export const createBooking = async (req, res) => {
       numberOfPeople,
     });
 
+    // Email content
     const clientMessage = `
 Hi ${name},
 
 🎶 Your booking is confirmed!
 
-Details:
+Booking Details:
 - Service: ${service}
 - Date: ${date}
 - Time: ${timeFrom} - ${timeTo}
-- People: ${numberOfPeople}
+- Guests: ${numberOfPeople}
 
-We’ll reach out shortly to confirm any details.
+We’ll be in touch soon to finalize everything.
 
 Thanks for choosing Heavenly Rhythms Studio!
     `;
 
     const adminMessage = `
-📥 New Booking Received:
+📥 New Booking Alert:
 
 - Name: ${name}
 - Email: ${email}
@@ -60,6 +62,7 @@ Thanks for choosing Heavenly Rhythms Studio!
 - Guests: ${numberOfPeople}
     `;
 
+    // Send both emails
     await Promise.all([
       sendEmail({
         to: email,
@@ -68,17 +71,21 @@ Thanks for choosing Heavenly Rhythms Studio!
       }),
       sendEmail({
         to: process.env.RECIPIENT_EMAIL,
-        subject: '📢 New Booking Alert',
+        subject: '📢 New Booking Received',
         text: adminMessage,
       }),
     ]);
 
     res.status(201).json({
-      message: '✅ Booking created and emails sent.',
+      message: '✅ Booking successful and emails sent.',
       booking,
     });
+
   } catch (error) {
-    console.error('❌ Booking failed:', error.message);
-    res.status(500).json({ message: 'Booking failed due to server error.' });
+    console.error('❌ Booking error:', error.message);
+    res.status(500).json({
+      message: 'Booking failed due to server error.',
+      error: error.message,
+    });
   }
 };
