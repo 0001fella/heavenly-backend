@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import mongoose from 'mongoose';
 
-// Route imports
+// Routes
 import bookingRoutes from './routes/bookingRoutes.js';
 import testimonialRoutes from './routes/testimonialRoutes.js';
 import commentRoutes from './routes/commentRoutes.js';
@@ -13,23 +13,22 @@ import contactRoutes from './routes/contactRoutes.js';
 dotenv.config();
 const app = express();
 
-// --- CORS CONFIG ---
+// --- CORS ---
 const allowedOrigins = [
   'https://heavenlyrhythms.netlify.app',
+  'http://localhost:5173',
   'http://localhost:5002'
 ];
 
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin || allowedOrigins.includes(origin)) {
-      return callback(null, true);
+      callback(null, true);
     } else {
-      console.warn(`❌ Blocked by CORS: ${origin}`);
-      return callback(new Error('Not allowed by CORS'));
+      console.warn(`❌ CORS blocked: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
     }
   },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
 }));
 
@@ -45,36 +44,35 @@ app.use((req, res, next) => {
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/testimonials', testimonialRoutes);
 app.use('/api/comments', commentRoutes);
-app.use('/api', contactRoutes); // contact form endpoint
+app.use('/api', contactRoutes); // contact endpoint
 
 // --- ERROR HANDLER ---
 app.use((err, req, res, next) => {
-  console.error('🔥 Unhandled server error:', err.stack);
-  res.status(500).json({ message: 'Something went wrong on the server.' });
+  console.error('🔥 Server Error:', err.stack);
+  res.status(500).json({ message: 'Internal Server Error' });
 });
 
-// --- DATABASE CONNECTION ---
+// --- DB CONNECTION ---
 const PORT = process.env.PORT || 5002;
-
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
   .then(() => {
-    console.log('✅ Connected to MongoDB');
-    app.listen(PORT, () => {
-      console.log(`🚀 Server running at http://localhost:${PORT}`);
-    });
+    console.log('✅ MongoDB connected');
+    app.listen(PORT, () =>
+      console.log(`🚀 Server running at http://localhost:${PORT}`)
+    );
   })
-  .catch(err => {
-    console.error('❌ Failed to connect to MongoDB:', err.message);
+  .catch((err) => {
+    console.error('❌ MongoDB connection error:', err.message);
     process.exit(1);
   });
 
-// --- GRACEFUL SHUTDOWN ---
+// --- CLEAN EXIT ---
 process.on('SIGINT', () => {
   mongoose.connection.close(() => {
-    console.log('🛑 MongoDB connection closed (SIGINT)');
+    console.log('🛑 MongoDB disconnected via app termination');
     process.exit(0);
   });
 });
